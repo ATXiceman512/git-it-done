@@ -1,5 +1,23 @@
 // SETUP VARIABLES
 var issueContainerEl = document.querySelector("#issues-container");
+var limitWarningEl = document.querySelector("#limit-warning");
+var repoNameEl = document.querySelector("#repo-name");
+
+
+var getRepoName = function(){
+    var queryString = document.location.search;
+    var repoName = queryString.split("=")[1];
+    
+    // checks to see if repot name is valid
+    if(repoName){
+        // display the repo name on the page
+        repoNameEl.textContent = repoName;
+        getRepoIssues(repoName);
+    } else {
+        // if no repo was given, take the user back to the index page
+        document.location.replace("./index.html");
+    }
+}
 
 var getRepoIssues = function(repo) {
     var apiUrl = "https://api.github.com/repos/" + repo + "/issues?direction=asc";
@@ -11,9 +29,14 @@ var getRepoIssues = function(repo) {
                 // pass response data to the dom function
                 displayIssues(data);
 
+                // check if the api has paginated issues
+                if(response.headers.get("Link")) {
+                    displayWarning(repo);
+                }
             });
         } else{
-            alert("There was a problem with your request");
+             // if not successful, redirect the user to index page
+             document.location.replace("./index.html");
         }
     });
 };
@@ -58,7 +81,20 @@ var displayIssues = function(issues) {
       issueContainerEl.appendChild(issueEl);
     }
   };
-  
 
-getRepoIssues("ATXiceman512/git-it-done");
+  var displayWarning = function(repo) {
+      // add text to warning container
+      limitWarningEl.textContent = "To see more than 30 issues, visit ";
+
+      var linkEl = document.createElement("a");
+      linkEl.textContent = repo + " repo page.";
+      linkEl.setAttribute("href", "https://github.com/" + repo + "/issues");
+      linkEl.setAttribute("target", "_blank");
+    
+      // append to warning container
+      limitWarningEl.appendChild(linkEl);
+      
+  };
+  
+getRepoName();
 
